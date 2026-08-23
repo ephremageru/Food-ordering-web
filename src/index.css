@@ -1,0 +1,879 @@
+/* ==========================================================================
+   Pizzafy — design tokens + layout
+   Motion lives in JS (framer-motion); CSS handles paint only, so that nothing
+   competes with the animation system for control of transform/opacity.
+   ========================================================================== */
+
+:root {
+  --accent: #f2622a;
+  --accent-deep: #d94e1c;
+  --accent-soft: #fdece3;
+
+  --ink: #14141a;
+  --ink-2: #3a3a44;
+  --muted: #9a9aa4;
+  --muted-2: #b9b9c2;
+
+  --surface: #ffffff;
+  --panel: #ececee;
+  --panel-2: #f4f4f6;
+  --page: #fbfbfc;
+
+  --dark: #17171b;
+  --dark-2: #26262c;
+
+  --success: #3ea55c;
+
+  --line: #ececed;
+
+  --r-sm: 12px;
+  --r-md: 18px;
+  --r-lg: 24px;
+  --r-xl: 32px;
+
+  --shadow-card: 0 1px 2px rgba(20, 20, 26, 0.04), 0 8px 20px -12px rgba(20, 20, 26, 0.14);
+  --shadow-card-hover: 0 2px 6px rgba(20, 20, 26, 0.06), 0 20px 34px -16px rgba(20, 20, 26, 0.22);
+  --shadow-float: 0 10px 34px -10px rgba(20, 20, 26, 0.28);
+
+  --app-w: 402px;
+  --app-h: 858px;
+
+  --safe-top: 12px;
+  --safe-bottom: 18px;
+}
+
+* { box-sizing: border-box; }
+
+html, body, #root { height: 100%; }
+
+body {
+  margin: 0;
+  font-family: 'Plus Jakarta Sans', -apple-system, BlinkMacSystemFont, 'Segoe UI', system-ui, sans-serif;
+  color: var(--ink);
+  background: var(--page);
+  -webkit-font-smoothing: antialiased;
+  text-rendering: optimizeLegibility;
+  overscroll-behavior: none;
+}
+
+button { font: inherit; color: inherit; border: 0; background: none; padding: 0; cursor: pointer; }
+input { font: inherit; }
+h1, h2, h3, p { margin: 0; }
+ul { margin: 0; padding: 0; list-style: none; }
+
+/* --------------------------------------------------------------------------
+   Desktop shell: the app keeps its phone proportions and sits in a device
+   frame, because the whole motion language is designed for a handheld surface.
+   Under 760px it goes full-bleed and the frame disappears.
+   -------------------------------------------------------------------------- */
+
+.stage {
+  min-height: 100%;
+  display: grid;
+  place-items: center;
+  padding: 0;
+  background: var(--page);
+}
+
+.device {
+  position: relative;
+  width: 100%;
+  height: 100dvh;
+  overflow: hidden;
+  background: var(--surface);
+  isolation: isolate;
+}
+
+@media (min-width: 760px) {
+  .stage {
+    padding: 32px;
+    background:
+      radial-gradient(1100px 620px at 50% -10%, #fdf0e8 0%, rgba(253, 240, 232, 0) 62%),
+      radial-gradient(760px 560px at 88% 108%, #eef1f7 0%, rgba(238, 241, 247, 0) 60%),
+      #f6f6f8;
+  }
+  .device {
+    width: var(--app-w);
+    height: min(var(--app-h), calc(100dvh - 64px));
+    border-radius: 46px;
+    box-shadow:
+      0 0 0 11px #101014,
+      0 0 0 13px #34343c,
+      0 44px 90px -30px rgba(16, 16, 20, 0.5);
+  }
+  .device::after {
+    content: '';
+    position: absolute;
+    top: 9px; left: 50%;
+    transform: translateX(-50%);
+    width: 108px; height: 30px;
+    background: #101014;
+    border-radius: 18px;
+    z-index: 60;
+    pointer-events: none;
+  }
+  :root { --safe-top: 44px; }
+}
+
+/* --------------------------------------------------------------------------
+   Screens
+   -------------------------------------------------------------------------- */
+
+.screen {
+  position: absolute;
+  inset: 0;
+  display: flex;
+  flex-direction: column;
+  background: var(--surface);
+  will-change: transform, opacity;
+}
+/* Morph screens stay transparent and paint their own backdrop, so the screen's
+   opacity is free to stay at 1 and the shared element never dims. */
+.screen--morph { background: transparent; }
+.screen-bg {
+  position: absolute;
+  inset: 0;
+  background: var(--surface);
+  /* Behind the screen's own content and inert: as a positioned element it would
+     otherwise paint over the in-flow children and swallow their taps. Contained
+     by the stacking context `.screen`'s transform creates. */
+  z-index: -1;
+  pointer-events: none;
+}
+
+.scroll {
+  flex: 1;
+  overflow-y: auto;
+  overflow-x: hidden;
+  -webkit-overflow-scrolling: touch;
+  scrollbar-width: none;
+}
+.scroll::-webkit-scrollbar { display: none; }
+
+.pad { padding-inline: 22px; }
+
+/* --------------------------------------------------------------------------
+   Typography
+   -------------------------------------------------------------------------- */
+
+.display {
+  font-size: 30px;
+  font-weight: 800;
+  letter-spacing: -0.035em;
+  line-height: 1.12;
+}
+.display .dim { color: var(--muted-2); }
+
+.h-screen {
+  font-size: 17px;
+  font-weight: 700;
+  letter-spacing: -0.02em;
+}
+.h-section { font-size: 15px; font-weight: 700; letter-spacing: -0.015em; }
+.label { font-size: 11px; font-weight: 500; color: var(--muted); letter-spacing: 0.01em; }
+.sub { font-size: 12.5px; color: var(--muted); font-weight: 500; }
+.currency {
+  color: var(--accent);
+  font-size: 0.62em;
+  font-weight: 800;
+  vertical-align: 0.52em;
+  margin-right: 1px;
+}
+
+/* --------------------------------------------------------------------------
+   Shared chrome
+   -------------------------------------------------------------------------- */
+
+.status-bar {
+  height: var(--safe-top);
+  flex: none;
+}
+
+.icon-btn {
+  width: 40px; height: 40px;
+  display: grid; place-items: center;
+  border-radius: 50%;
+  background: var(--surface);
+  color: var(--ink);
+  box-shadow: inset 0 0 0 1px var(--line);
+}
+.icon-btn--plain { background: var(--panel-2); box-shadow: none; }
+
+.topbar {
+  flex: none;
+  display: grid;
+  grid-template-columns: 40px 1fr 40px;
+  align-items: center;
+  gap: 10px;
+  padding: 6px 22px 10px;
+}
+.topbar .h-screen { text-align: center; }
+
+.primary-btn {
+  width: 100%;
+  height: 56px;
+  border-radius: 999px;
+  background: var(--dark);
+  color: #fff;
+  font-weight: 700;
+  font-size: 15px;
+  letter-spacing: -0.01em;
+  display: grid;
+  place-items: center;
+  box-shadow: var(--shadow-float);
+}
+.primary-btn:disabled { cursor: default; }
+
+.bottom-dock {
+  flex: none;
+  padding: 10px 22px calc(var(--safe-bottom) + 6px);
+  background: linear-gradient(to top, var(--surface) 62%, rgba(255, 255, 255, 0));
+}
+
+/* --------------------------------------------------------------------------
+   Sheets & modals
+   -------------------------------------------------------------------------- */
+
+.sheet-root { position: absolute; inset: 0; z-index: 80; display: flex; flex-direction: column; justify-content: flex-end; }
+.sheet-backdrop { position: absolute; inset: 0; background: rgba(14, 14, 18, 0.4); }
+.sheet-panel { position: relative; background: var(--surface); }
+.sheet-panel--bottom { border-radius: 26px 26px 0 0; padding: 8px 22px calc(var(--safe-bottom) + 12px); box-shadow: 0 -18px 50px -20px rgba(0,0,0,0.4); }
+.sheet-panel--modal { margin: auto; width: min(340px, calc(100% - 44px)); border-radius: var(--r-lg); padding: 22px; box-shadow: 0 30px 70px -24px rgba(0,0,0,0.5); }
+.sheet-grabber { width: 38px; height: 4px; border-radius: 999px; background: #dcdce1; margin: 0 auto 12px; }
+
+/* --------------------------------------------------------------------------
+   Toast
+   -------------------------------------------------------------------------- */
+
+.toast-layer {
+  position: absolute;
+  left: 0; right: 0;
+  bottom: calc(var(--safe-bottom) + 92px);
+  z-index: 90;
+  display: flex;
+  flex-direction: column;
+  align-items: center;
+  gap: 8px;
+  pointer-events: none;
+  padding-inline: 22px;
+}
+.toast {
+  display: flex;
+  align-items: center;
+  gap: 9px;
+  padding: 11px 16px;
+  border-radius: 999px;
+  background: rgba(23, 23, 27, 0.95);
+  color: #fff;
+  font-size: 13px;
+  font-weight: 600;
+  box-shadow: var(--shadow-float);
+  backdrop-filter: blur(8px);
+}
+.toast-icon { display: grid; place-items: center; color: var(--accent); }
+
+/* --------------------------------------------------------------------------
+   Reduced motion
+   -------------------------------------------------------------------------- */
+
+@media (prefers-reduced-motion: reduce) {
+  *, *::before, *::after {
+    animation-duration: 0.001ms !important;
+    animation-iteration-count: 1 !important;
+    transition-duration: 0.001ms !important;
+    scroll-behavior: auto !important;
+  }
+}
+
+/* --------------------------------------------------------------------------
+   Onboarding
+   -------------------------------------------------------------------------- */
+
+.onboarding { flex: 1; display: flex; flex-direction: column; background: var(--surface); }
+
+.onboarding-art {
+  position: relative;
+  flex: 1;
+  min-height: 0;
+  background: linear-gradient(180deg, #f0e6dd 0%, #e9ddd2 46%, #f6f0ea 78%, #ffffff 100%);
+  overflow: hidden;
+}
+.onboarding-fade {
+  position: absolute;
+  left: 0; right: 0; bottom: 0;
+  height: 34%;
+  background: linear-gradient(to top, var(--surface) 12%, rgba(255, 255, 255, 0));
+  pointer-events: none;
+}
+
+.hero-scene { position: absolute; inset: 0; }
+
+/* Anchors own the layout transform; the motion child inside owns the animated
+   one. Framer writes `transform` wholesale, so a positioning translate on the
+   same element would be erased the moment the animation starts. */
+.hero-piece { position: absolute; transform: translate(-50%, -50%); }
+.hero-piece-inner { will-change: transform, opacity; }
+.hero-sauce {
+  position: absolute;
+  left: 50%; top: 37%;
+  width: 62%;
+  transform: translateX(-50%);
+  opacity: 0.92;
+}
+.hero-sauce svg { width: 100%; height: 58px; display: block; will-change: transform, opacity; }
+.hero-pizza {
+  position: absolute;
+  left: 50%; bottom: 11%;
+  width: 72%;
+  aspect-ratio: 1;
+  transform: translateX(-50%);
+}
+.hero-pizza-inner { width: 100%; height: 100%; will-change: transform, opacity; }
+
+.onboarding-copy {
+  flex: none;
+  padding: 0 26px calc(var(--safe-bottom) + 14px);
+  text-align: center;
+  background: var(--surface);
+}
+.onboarding-title {
+  font-size: 26px;
+  font-weight: 800;
+  letter-spacing: -0.035em;
+  line-height: 1.24;
+}
+.onboarding-sub {
+  margin-top: 10px;
+  font-size: 13px;
+  color: var(--muted);
+  font-weight: 500;
+}
+.onboarding-cta { margin-top: 22px; }
+
+/* --------------------------------------------------------------------------
+   Category arc
+   -------------------------------------------------------------------------- */
+
+.cat-arc {
+  position: relative;
+  display: grid;
+  grid-template-columns: repeat(5, 1fr);
+  align-items: end;
+  gap: 2px;
+  padding: 66px 4px 12px;
+  margin-top: 0;
+}
+.cat-arc-bg {
+  position: absolute;
+  left: 0; right: 0;
+  top: 22px; bottom: -900px;
+  background: var(--panel);
+  /* Elliptical top edge — the arc the category icons are seated on. */
+  border-radius: 50% 50% 0 0 / 66px 66px 0 0;
+  z-index: 0;
+}
+.cat-item {
+  position: relative;
+  z-index: 1;
+  display: flex;
+  flex-direction: column;
+  align-items: center;
+  gap: 7px;
+}
+.cat-icon {
+  display: grid;
+  place-items: center;
+  border-radius: 50%;
+  background: var(--surface);
+  color: var(--ink);
+  box-shadow: 0 4px 12px -6px rgba(20, 20, 26, 0.24);
+  will-change: transform;
+}
+.cat-item.is-active .cat-icon { box-shadow: 0 8px 18px -8px rgba(20, 20, 26, 0.32); }
+.cat-label { font-size: 11px; letter-spacing: -0.01em; white-space: nowrap; }
+.cat-underline-slot { display: block; height: 3px; width: 22px; }
+.cat-underline-row {
+  position: absolute;
+  left: 4px; right: 4px;
+  bottom: 12px;
+  display: grid;
+  grid-template-columns: repeat(5, 1fr);
+  align-items: end;
+  pointer-events: none;
+  z-index: 2;
+}
+.cat-underline-cell { display: grid; justify-items: center; align-items: end; }
+.cat-underline { display: block; width: 22px; height: 3px; border-radius: 999px; background: var(--ink); }
+
+/* --------------------------------------------------------------------------
+   Pizza cards
+   -------------------------------------------------------------------------- */
+
+.card-grid {
+  position: relative;
+  z-index: 1;
+  display: grid;
+  grid-template-columns: 1fr 1fr;
+  column-gap: 13px;
+  /* Large row gap on purpose: each pizza sits ~46px above its own card, and
+     the gap is what keeps it from landing on the card above. */
+  row-gap: 66px;
+  padding: 58px 22px 132px;
+}
+.card-cell { display: flex; }
+.card {
+  position: relative;
+  flex: 1;
+  padding: 0 12px 12px;
+  border-radius: var(--r-lg);
+  background: var(--surface);
+  box-shadow: var(--shadow-card);
+  cursor: pointer;
+  will-change: transform;
+  outline: none;
+}
+.card:focus-visible { box-shadow: var(--shadow-card), 0 0 0 2px var(--accent); }
+
+/* The pizza deliberately overhangs the card's top edge, as in the reference. */
+.card-art { position: relative; height: 42px; }
+.card-pizza {
+  position: absolute;
+  left: 50%;
+  bottom: -6px;
+  width: 104px;
+  height: 104px;
+  transform: translateX(-50%);
+  will-change: transform;
+  pointer-events: none;
+}
+.card-body { position: relative; text-align: center; }
+.card-badge {
+  display: inline-block;
+  padding: 4px 9px;
+  border-radius: 999px;
+  background: var(--dark);
+  color: #fff;
+  font-size: 10px;
+  font-weight: 700;
+  letter-spacing: 0.01em;
+}
+.card-title {
+  margin-top: 8px;
+  font-size: 13.5px;
+  font-weight: 700;
+  letter-spacing: -0.02em;
+  line-height: 1.2;
+}
+.card-tagline { margin-top: 3px; font-size: 10.5px; color: var(--muted); font-weight: 500; }
+.card-foot {
+  margin-top: 10px;
+  display: flex;
+  align-items: center;
+  justify-content: space-between;
+}
+.card-price { font-size: 17px; font-weight: 800; letter-spacing: -0.03em; }
+.card-add {
+  width: 30px; height: 30px;
+  display: grid; place-items: center;
+  border-radius: 50%;
+  background: var(--panel-2);
+  color: var(--ink);
+  will-change: transform;
+}
+
+/* --------------------------------------------------------------------------
+   Tab bar
+   -------------------------------------------------------------------------- */
+
+.tabbar {
+  position: absolute;
+  left: 0; right: 0;
+  bottom: calc(var(--safe-bottom) + 4px);
+  /* Centred by margin, not by transform: the show/hide animation owns
+     `transform`, and a translateX here would be overwritten by it. */
+  width: fit-content;
+  margin-inline: auto;
+  z-index: 40;
+  display: flex;
+  align-items: center;
+  gap: 4px;
+  padding: 7px;
+  border-radius: 999px;
+  background: var(--dark);
+  box-shadow: 0 14px 34px -12px rgba(16, 16, 20, 0.6);
+}
+.tab {
+  position: relative;
+  width: 46px; height: 46px;
+  display: grid; place-items: center;
+  border-radius: 50%;
+  color: #fff;
+  will-change: transform;
+}
+.tab-pill {
+  position: absolute;
+  inset: 0;
+  border-radius: 50%;
+  background: var(--accent);
+}
+.tab-icon { position: relative; z-index: 1; display: grid; place-items: center; will-change: transform; }
+
+/* --------------------------------------------------------------------------
+   Home
+   -------------------------------------------------------------------------- */
+
+.home-head { flex: none; padding-bottom: 4px; }
+.home-topline {
+  display: grid;
+  grid-template-columns: 38px 1fr auto auto;
+  align-items: center;
+  gap: 10px;
+}
+.avatar { width: 38px; height: 38px; border-radius: 50%; overflow: hidden; }
+.avatar svg { width: 100%; height: 100%; display: block; }
+.home-address { display: flex; flex-direction: column; gap: 1px; min-width: 0; }
+.home-address-btn {
+  display: flex; align-items: center; gap: 4px;
+  font-size: 13.5px; font-weight: 700; letter-spacing: -0.02em;
+}
+.home-display { margin-top: 20px; }
+.search {
+  margin-top: 16px;
+  display: flex;
+  align-items: center;
+  gap: 10px;
+  height: 48px;
+  padding: 0 16px;
+  border-radius: var(--r-md);
+  background: var(--surface);
+  box-shadow: inset 0 0 0 1px var(--line);
+}
+.search-icon { color: var(--muted); flex: none; }
+.search input {
+  flex: 1; min-width: 0; border: 0; outline: none; background: none;
+  font-size: 13.5px; font-weight: 500; color: var(--ink);
+}
+.search input::placeholder { color: var(--muted); }
+
+.home-scroll { margin-top: 4px; }
+
+.cart-btn { position: relative; }
+.cart-badge {
+  position: absolute;
+  top: -3px; right: -3px;
+  min-width: 18px; height: 18px;
+  padding: 0 4px;
+  display: grid; place-items: center;
+  border-radius: 999px;
+  background: var(--accent);
+  color: #fff;
+  font-size: 10.5px;
+  font-weight: 800;
+  box-shadow: 0 0 0 2px var(--surface);
+  overflow: hidden;
+}
+
+/* --------------------------------------------------------------------------
+   Product detail
+   -------------------------------------------------------------------------- */
+
+.pd-body { position: absolute; inset: 0; display: flex; flex-direction: column; will-change: opacity, filter; }
+.pd-topbar { padding-top: var(--safe-top); }
+
+.pd-info { padding-bottom: 130px; }
+.pd-title { font-size: 25px; font-weight: 800; letter-spacing: -0.035em; line-height: 1.1; max-width: 58%; }
+.pd-tagline { margin-top: 4px; font-size: 12px; color: var(--muted); font-weight: 500; }
+.pd-rating { margin-top: 14px; display: flex; align-items: center; gap: 2px; color: var(--accent); }
+.pd-rating-value { margin-left: 5px; font-size: 11px; color: var(--muted); font-weight: 600; }
+.pd-price { margin-top: 10px; font-size: 30px; font-weight: 800; letter-spacing: -0.04em; }
+.pd-fact { margin-top: 20px; }
+.pd-fact .label { display: flex; align-items: center; gap: 5px; }
+.pd-fact strong { display: block; margin-top: 3px; font-size: 14px; font-weight: 700; letter-spacing: -0.02em; }
+.pd-group { margin-top: 24px; }
+/* The size row is the first full-width block under the hero, so it carries the
+   clearance that keeps the pizza from sitting on top of the controls. */
+.pd-group--first { margin-top: 64px; }
+.pd-group > .label { display: block; margin-bottom: 9px; }
+
+.pd-sizes { position: relative; display: grid; grid-template-columns: repeat(3, 1fr); gap: 9px; }
+.pd-size {
+  position: relative;
+  z-index: 1;
+  height: 42px;
+  border-radius: 999px;
+  box-shadow: inset 0 0 0 1px var(--line);
+  background: none;
+  will-change: transform;
+}
+.pd-size-pill {
+  /* Taken out of the grid flow: as a grid item it consumed a cell and pushed
+     the third size onto a second row. `--i` is the selected index; framer's
+     `layout` turns the resulting position change into a spring. */
+  position: absolute;
+  top: 0;
+  left: calc((100% - 18px) / 3 * var(--i) + var(--i) * 9px);
+  width: calc((100% - 18px) / 3);
+  height: 42px;
+  border-radius: 999px;
+  background: var(--accent);
+}
+.pd-size-label {
+  position: relative; z-index: 1;
+  font-size: 13px; font-weight: 600; letter-spacing: -0.01em;
+  transition: color 160ms ease-out;
+}
+.pd-size.is-active .pd-size-label { color: #fff; font-weight: 700; }
+
+.pd-extras { display: flex; flex-wrap: wrap; gap: 8px; }
+.pd-extra {
+  display: flex; align-items: center; gap: 7px;
+  height: 38px; padding: 0 14px;
+  border-radius: 999px;
+  background: var(--surface);
+  box-shadow: inset 0 0 0 1px var(--line);
+  font-size: 12.5px; font-weight: 600; letter-spacing: -0.01em;
+  will-change: transform;
+  overflow: hidden;
+}
+.pd-extra.is-on { box-shadow: inset 0 0 0 1.5px var(--accent); background: var(--accent-soft); }
+.pd-extra-mark { width: 16px; height: 16px; display: grid; place-items: center; position: relative; }
+.pd-extra-check { display: grid; place-items: center; width: 16px; height: 16px; border-radius: 50%; background: var(--accent); color: #fff; }
+.pd-extra-dot { width: 16px; height: 16px; display: grid; place-items: center; }
+.pd-extra-dot svg { width: 100%; height: 100%; }
+.pd-extra-price { font-size: 11px; font-weight: 700; color: var(--accent); white-space: nowrap; overflow: hidden; }
+
+.pd-desc { margin-top: 22px; font-size: 12.5px; line-height: 1.62; color: var(--muted); font-weight: 500; }
+
+/* Hero sits above the scrolling copy, clear of the blur layer. */
+.pd-hero {
+  position: absolute;
+  top: 148px;
+  right: 6px;
+  width: 178px;
+  height: 178px;
+  z-index: 12;
+  will-change: transform;
+}
+.pd-hero-inner { width: 100%; height: 100%; will-change: transform; }
+.pd-hero--docked {
+  top: auto;
+  bottom: calc(var(--safe-bottom) + 18px);
+  right: 22px;
+  width: 56px;
+  height: 56px;
+}
+
+.pd-dock {
+  position: absolute;
+  left: 0; right: 0;
+  bottom: 0;
+  z-index: 14;
+  display: flex;
+  align-items: center;
+  gap: 12px;
+  padding: 12px 22px calc(var(--safe-bottom) + 12px);
+  background: linear-gradient(to top, var(--surface) 66%, rgba(255, 255, 255, 0));
+}
+.pd-qty {
+  flex: none;
+  display: flex;
+  align-items: center;
+  gap: 4px;
+  height: 56px;
+  padding: 0 6px;
+  border-radius: 999px;
+  background: var(--surface);
+  box-shadow: inset 0 0 0 1px var(--line);
+}
+.pd-qty button { width: 34px; height: 34px; display: grid; place-items: center; border-radius: 50%; color: var(--ink); }
+.pd-qty button:disabled { color: var(--muted-2); cursor: default; }
+.pd-qty-value {
+  min-width: 22px;
+  display: grid; place-items: center;
+  font-size: 15px; font-weight: 700;
+}
+.pd-add-wrap { min-width: 56px; }
+.pd-add { height: 56px; }
+.pd-add-inner { display: flex; align-items: center; justify-content: center; white-space: nowrap; }
+.pd-add-text { overflow: hidden; }
+
+/* --------------------------------------------------------------------------
+   Cart
+   -------------------------------------------------------------------------- */
+
+.cart-sub { flex: none; margin-top: -4px; margin-bottom: 12px; font-size: 12px; color: var(--muted); font-weight: 500; }
+.cart-list { display: flex; flex-direction: column; }
+.cart-row {
+  display: grid;
+  grid-template-columns: 58px 1fr auto;
+  align-items: center;
+  gap: 13px;
+  padding: 12px 0;
+  overflow: hidden;
+}
+.cart-thumb {
+  width: 58px; height: 58px;
+  border-radius: 50%;
+  background: var(--panel-2);
+  display: grid; place-items: center;
+  overflow: hidden;
+}
+.cart-meta { min-width: 0; }
+.cart-meta h3 { font-size: 14px; font-weight: 700; letter-spacing: -0.02em; }
+.cart-meta .sub { margin-top: 2px; font-size: 11px; }
+.cart-price { display: block; margin-top: 5px; font-size: 16px; font-weight: 800; letter-spacing: -0.03em; }
+.cart-stepper {
+  display: flex; flex-direction: column; align-items: center; gap: 2px;
+  padding: 5px 3px;
+  border-radius: 999px;
+  box-shadow: inset 0 0 0 1px var(--line);
+}
+.cart-stepper button { width: 26px; height: 26px; display: grid; place-items: center; border-radius: 50%; }
+.cart-qty { height: 20px; display: grid; place-items: center; font-size: 13px; font-weight: 700; overflow: hidden; }
+
+.cart-foot {
+  flex: none;
+  padding: 14px 22px calc(var(--safe-bottom) + 12px);
+  background: var(--surface);
+  box-shadow: 0 -1px 0 var(--line);
+}
+.sum-row { display: flex; align-items: center; justify-content: space-between; padding: 4px 0; font-size: 12.5px; color: var(--muted); font-weight: 500; }
+.sum-row strong { color: var(--ink-2); font-weight: 700; font-size: 13px; }
+.sum-divider { height: 1px; background: var(--line); margin: 9px 0; }
+.sum-row--total { font-size: 14px; color: var(--ink); font-weight: 700; }
+.cart-total { font-size: 21px; font-weight: 800; letter-spacing: -0.035em; }
+.cart-foot .primary-btn { margin-top: 14px; }
+
+.empty { padding: 48px 0; text-align: center; }
+.empty .sub { margin-top: 6px; }
+.empty-cta {
+  margin-top: 18px; height: 44px; padding: 0 22px;
+  border-radius: 999px; background: var(--dark); color: #fff;
+  font-size: 13px; font-weight: 700;
+}
+
+/* --------------------------------------------------------------------------
+   Checkout
+   -------------------------------------------------------------------------- */
+
+.co-scroll { padding-bottom: 24px; }
+.co-card {
+  margin-bottom: 13px;
+  padding: 16px;
+  border-radius: var(--r-lg);
+  background: var(--panel-2);
+}
+.co-card .h-section { margin-bottom: 10px; }
+.co-method {
+  width: 100%;
+  display: grid;
+  grid-template-columns: 34px 1fr auto 22px;
+  align-items: center;
+  gap: 10px;
+  padding: 9px 0;
+  text-align: left;
+}
+.co-logo { width: 34px; height: 34px; display: grid; place-items: center; border-radius: 9px; background: var(--surface); }
+.co-method-label { font-size: 13.5px; font-weight: 700; letter-spacing: -0.02em; }
+.co-method-detail { font-size: 11.5px; color: var(--muted); font-weight: 600; letter-spacing: 0.01em; }
+.co-radio {
+  width: 22px; height: 22px;
+  border-radius: 50%;
+  border: 1.6px solid var(--muted-2);
+  display: grid; place-items: center;
+  will-change: transform;
+}
+.co-addmethod {
+  width: 100%;
+  margin-top: 10px;
+  height: 44px;
+  display: flex; align-items: center; justify-content: center; gap: 7px;
+  border-radius: var(--r-md);
+  background: var(--surface);
+  font-size: 12.5px; font-weight: 700; letter-spacing: -0.01em;
+}
+.co-address-row { display: grid; grid-template-columns: 22px 1fr 18px; align-items: center; gap: 10px; color: var(--ink); }
+.co-address-row strong { display: block; font-size: 13px; font-weight: 700; letter-spacing: -0.02em; }
+.co-address-row .sub { font-size: 11.5px; }
+.co-address-row > svg:last-child { color: var(--muted-2); }
+
+.co-pay { position: relative; }
+.co-pay-inner { position: relative; display: grid; place-items: center; height: 20px; }
+.co-pay-inner > span { position: absolute; display: flex; align-items: center; gap: 9px; white-space: nowrap; }
+.co-pay-busy { color: #fff; }
+
+.sheet-option {
+  width: 100%;
+  display: flex; align-items: center; justify-content: space-between;
+  height: 52px; padding: 0 16px; margin-bottom: 8px;
+  border-radius: var(--r-md);
+  background: var(--panel-2);
+  font-size: 13.5px; font-weight: 600;
+}
+
+/* --------------------------------------------------------------------------
+   Payment success
+   -------------------------------------------------------------------------- */
+
+.success {
+  flex: 1;
+  display: flex;
+  flex-direction: column;
+  background: var(--surface);
+  padding: var(--safe-top) 26px calc(var(--safe-bottom) + 18px);
+}
+.success-center { flex: 1; display: flex; flex-direction: column; align-items: center; justify-content: center; margin-top: -6%; }
+.success-badge { position: relative; display: grid; place-items: center; }
+.success-badge > svg { display: block; }
+.success-burst { position: absolute; left: 50%; top: 50%; transform: translate(-50%, -50%); pointer-events: none; }
+.success-title { margin-top: 22px; font-size: 20px; font-weight: 800; letter-spacing: -0.03em; }
+.success-meta { margin-top: 8px; font-size: 12.5px; color: var(--muted); font-weight: 600; }
+.success-note { margin-top: 4px; font-size: 11.5px; color: var(--muted-2); font-weight: 500; }
+.success-foot { text-align: center; font-size: 11.5px; color: var(--muted-2); font-weight: 500; }
+
+/* --------------------------------------------------------------------------
+   Orders
+   -------------------------------------------------------------------------- */
+
+.order-card {
+  margin-bottom: 14px;
+  padding: 16px;
+  border-radius: var(--r-lg);
+  background: var(--panel-2);
+}
+.order-head { display: flex; align-items: baseline; justify-content: space-between; gap: 10px; }
+.order-head strong { font-size: 14px; font-weight: 700; letter-spacing: -0.02em; }
+.order-head .sub { font-size: 11px; white-space: nowrap; }
+
+.order-track { margin: 16px 0 6px; }
+.order-track-rail {
+  position: relative;
+  height: 3px;
+  margin: 0 6px 9px;
+  border-radius: 999px;
+  background: #dcdce2;
+  overflow: hidden;
+}
+.order-track-fill { height: 100%; border-radius: 999px; background: var(--accent); }
+.order-track-stops { display: grid; grid-template-columns: repeat(5, 1fr); gap: 2px; }
+.order-stop { display: flex; flex-direction: column; align-items: center; gap: 5px; }
+.order-dot { width: 8px; height: 8px; border-radius: 50%; background: #dcdce2; margin-top: -15px; }
+.order-stop-label { font-size: 8.5px; color: var(--ink-2); text-align: center; letter-spacing: -0.01em; }
+
+.order-lines { margin-top: 10px; }
+.order-line { display: grid; grid-template-columns: 52px 1fr; align-items: center; gap: 12px; padding: 8px 0; }
+.order-thumb { width: 52px; height: 52px; background: var(--surface); }
+
+/* --------------------------------------------------------------------------
+   Profile
+   -------------------------------------------------------------------------- */
+
+.profile-head { display: flex; align-items: center; gap: 14px; margin: 12px 0 22px; }
+.avatar--lg { width: 62px; height: 62px; }
+.profile-row {
+  display: flex; align-items: center; justify-content: space-between; gap: 12px;
+  padding: 15px 16px; margin-bottom: 9px;
+  border-radius: var(--r-md);
+  background: var(--panel-2);
+}
+.profile-row strong { font-size: 13px; font-weight: 700; letter-spacing: -0.02em; }
