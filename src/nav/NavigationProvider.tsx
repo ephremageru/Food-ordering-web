@@ -59,6 +59,31 @@ export const useNav = () => {
 /** Tab roots are siblings — moving between them is never a push. */
 export const TAB_ROUTES: RouteName[] = ['home', 'search', 'favorites', 'orders', 'profile']
 
+/**
+ * URL sync is a convenience, not a dependency.
+ *
+ * Sandboxed embeds (and some in-app browsers) throw on `history.pushState`
+ * because the document's origin is opaque. Navigation must keep working there,
+ * so a failed history write is swallowed and the in-memory stack stays
+ * authoritative.
+ */
+function safeHistory(op: 'push' | 'replace', depth: number, url: string) {
+  try {
+    if (op === 'push') window.history.pushState({ depth }, '', url)
+    else window.history.replaceState({ depth }, '', url)
+  } catch {
+    /* URL stays stale; the stack is still correct. */
+  }
+}
+
+function safeBack() {
+  try {
+    window.history.back()
+  } catch {
+    /* Nothing to do — `back()` already popped our own stack. */
+  }
+}
+
 function encode(stack: Route[]) {
   const top = stack[stack.length - 1]
   const params = top.params ? new URLSearchParams(top.params).toString() : ''
@@ -80,9 +105,7 @@ export function NavigationProvider({
     setState(next)
     if (historyOp === 'none') return
     internal.current = true
-    const url = encode(next.stack)
-    if (historyOp === 'push') window.history.pushState({ depth: next.stack.length }, '', url)
-    else window.history.replaceState({ depth: next.stack.length }, '', url)
+    safeHistory(historyOp, next.stack.length, encode(next.stack))
     // Released on the next task so the popstate we just caused (if any) is ignored.
     window.setTimeout(() => (internal.current = false), 0)
   }, [])
@@ -102,7 +125,7 @@ export function NavigationProvider({
           direction: 1,
         }
         internal.current = true
-        window.history.pushState({ depth: next.stack.length }, '', encode(next.stack))
+        safeHistory('push', next.stack.length, encode(next.stack))
         window.setTimeout(() => (internal.current = false), 0)
         return next
       })
@@ -118,7 +141,7 @@ export function NavigationProvider({
           direction: 1,
         }
         internal.current = true
-        window.history.replaceState({ depth: next.stack.length }, '', encode(next.stack))
+        safeHistory('replace', next.stack.length, encode(next.stack))
         window.setTimeout(() => (internal.current = false), 0)
         return next
       })
@@ -141,7 +164,7 @@ export function NavigationProvider({
     setState((s) => {
       if (s.stack.length <= 1) return s
       internal.current = true
-      window.history.back()
+      safeBack()
       window.setTimeout(() => (internal.current = false), 0)
       return { stack: s.stack.slice(0, -1), direction: -1 }
     })

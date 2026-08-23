@@ -18,7 +18,12 @@ import type { CategoryId } from './data/pizzas'
 
 /** Reads the route out of the URL so a refresh or a deep link lands correctly. */
 function initialRoute(): Route {
-  const hash = window.location.hash.replace(/^#\/?/, '')
+  let hash = ''
+  try {
+    hash = window.location.hash.replace(/^#\/?/, '')
+  } catch {
+    /* Opaque-origin embeds can refuse location access; start at onboarding. */
+  }
   const [name, query] = hash.split('?')
   const params = query ? Object.fromEntries(new URLSearchParams(query)) : undefined
   const known = ['home', 'search', 'favorites', 'orders', 'profile', 'product', 'cart', 'checkout']
